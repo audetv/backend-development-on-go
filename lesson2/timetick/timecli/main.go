@@ -17,9 +17,25 @@ func main() {
 		Timeout:   time.Second,
 		KeepAlive: time.Minute,
 	}
-	conn, err := dialer.DialContext(ctx, "tcp", "127.127.127:9000")
+	conn, err := dialer.DialContext(ctx, "tcp", "[::1]:9000")
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(io.Copy(os.Stdout, conn))
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+			text, _ := io.Copy(os.Stdout, conn)
+			if text == 0 {
+				break
+			}
+			log.Println(text)
+		}
+	}()
+
+	<-ctx.Done()
 }
