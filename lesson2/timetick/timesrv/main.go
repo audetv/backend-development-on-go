@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -57,11 +58,7 @@ func main() {
 				log.Println(err)
 			} else {
 				wg.Add(1)
-				//createNewChannel(conn, event)
 				go handleConn(ctx, conn, wg, event)
-				// event.leaving <- ch
-				// log.Println(remoteAddr + " has left")
-				// conn.Close()
 			}
 		}
 	}()
@@ -75,18 +72,6 @@ func main() {
 	log.Println("exit")
 }
 
-func createNewChannel(conn net.Conn, event *events) chan string {
-	ch := make(chan string)
-	go clientWriter(conn, ch)
-
-	remoteAddr := conn.RemoteAddr().String()
-	ch <- "Welcome, " + remoteAddr
-	event.entering <- ch
-
-	log.Println(remoteAddr + " has arrived")
-	return ch
-}
-
 func scanServerInput(event *events) {
 	scanner := bufio.NewScanner(os.Stdin)
 
@@ -97,23 +82,38 @@ func scanServerInput(event *events) {
 
 func handleConn(ctx context.Context, conn net.Conn, wg *sync.WaitGroup, event *events) {
 	defer wg.Done()
-	defer conn.Close()
 
 	ch := createNewChannel(conn, event)
+
+	defer func() {
+		event.leaving <- ch
+		log.Println(conn.RemoteAddr().String() + " has left")
+	}()
+	defer conn.Close()
+
 	tck := time.NewTicker(time.Second)
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case t := <-tck.C:
-			fmt.Fprintf(conn, "now: %s\n", t)
-			log.Println(conn)
+			_, err := io.WriteString(conn, t.String()+"\r\n")
+			if err != nil {
+				return
+			}
 		}
 	}
-	// Unreachable code
-	event.leaving <- ch
-	log.Println("event.leaving done")
-	conn.Close()
+}
+
+func createNewChannel(conn net.Conn, event *events) chan string {
+	ch := make(chan string)
+	go clientWriter(conn, ch)
+
+	//ch <- "Welcome, " + conn.RemoteAddr().String()
+	event.entering <- ch
+
+	log.Println(conn.RemoteAddr().String() + " has arrived")
+	return ch
 }
 
 func clientWriter(conn net.Conn, ch <-chan string) {
