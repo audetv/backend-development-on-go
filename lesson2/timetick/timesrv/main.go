@@ -57,8 +57,8 @@ func main() {
 				log.Println(err)
 			} else {
 				wg.Add(1)
-				createNewChannel(conn, event)
-				go handleConn(ctx, conn, wg)
+				//createNewChannel(conn, event)
+				go handleConn(ctx, conn, wg, event)
 				// event.leaving <- ch
 				// log.Println(remoteAddr + " has left")
 				// conn.Close()
@@ -75,7 +75,7 @@ func main() {
 	log.Println("exit")
 }
 
-func createNewChannel(conn net.Conn, event *events) {
+func createNewChannel(conn net.Conn, event *events) chan string {
 	ch := make(chan string)
 	go clientWriter(conn, ch)
 
@@ -84,6 +84,7 @@ func createNewChannel(conn net.Conn, event *events) {
 	event.entering <- ch
 
 	log.Println(remoteAddr + " has arrived")
+	return ch
 }
 
 func scanServerInput(event *events) {
@@ -94,10 +95,11 @@ func scanServerInput(event *events) {
 	}
 }
 
-func handleConn(ctx context.Context, conn net.Conn, wg *sync.WaitGroup) {
+func handleConn(ctx context.Context, conn net.Conn, wg *sync.WaitGroup, event *events) {
 	defer wg.Done()
 	defer conn.Close()
 
+	ch := createNewChannel(conn, event)
 	tck := time.NewTicker(time.Second)
 	for {
 		select {
@@ -105,8 +107,13 @@ func handleConn(ctx context.Context, conn net.Conn, wg *sync.WaitGroup) {
 			return
 		case t := <-tck.C:
 			fmt.Fprintf(conn, "now: %s\n", t)
+			log.Println(conn)
 		}
 	}
+	// Unreachable code
+	event.leaving <- ch
+	log.Println("event.leaving done")
+	conn.Close()
 }
 
 func clientWriter(conn net.Conn, ch <-chan string) {
