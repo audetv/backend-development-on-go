@@ -110,6 +110,7 @@ func createNewChannel(conn net.Conn, event *events) chan string {
 	go clientWriter(conn, ch)
 
 	//ch <- "Welcome, " + conn.RemoteAddr().String()
+	//ch <- "Welcome, " + conn.RemoteAddr().String()
 	event.entering <- ch
 
 	log.Println(conn.RemoteAddr().String() + " has arrived")
