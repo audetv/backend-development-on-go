@@ -55,7 +55,6 @@ func main() {
 			conn, err := listener.Accept()
 			if err != nil {
 				log.Println(err)
-				continue
 			} else {
 				wg.Add(1)
 				createNewChannel(conn, event)
@@ -70,6 +69,7 @@ func main() {
 	<-ctx.Done()
 
 	log.Println("done")
+	// after ctx.Done, got accept tcp [::]:9000: use of closed network connection
 	listener.Close()
 	wg.Wait()
 	log.Println("exit")
@@ -96,6 +96,7 @@ func scanServerInput(event *events) {
 
 func handleConn(ctx context.Context, conn net.Conn, wg *sync.WaitGroup) {
 	defer wg.Done()
+	defer conn.Close()
 
 	tck := time.NewTicker(time.Second)
 	for {
