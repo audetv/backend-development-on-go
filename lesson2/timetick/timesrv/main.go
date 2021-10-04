@@ -66,7 +66,7 @@ func main() {
 	<-ctx.Done()
 
 	log.Println("done")
-	// after ctx.Done, got accept tcp [::]:9000: use of closed network connection
+	// in some cases after ctx.Done, got accept tcp [::]:9000: use of closed network connection
 	listener.Close()
 	wg.Wait()
 	log.Println("exit")
@@ -83,7 +83,12 @@ func scanServerInput(event *events) {
 func handleConn(ctx context.Context, conn net.Conn, wg *sync.WaitGroup, event *events) {
 	defer wg.Done()
 
-	ch := createNewChannel(conn, event)
+	ch := make(chan string)
+	go clientWriter(conn, ch)
+
+	event.entering <- ch
+
+	log.Println(conn.RemoteAddr().String() + " has arrived")
 
 	defer func() {
 		event.leaving <- ch
@@ -103,17 +108,6 @@ func handleConn(ctx context.Context, conn net.Conn, wg *sync.WaitGroup, event *e
 			}
 		}
 	}
-}
-
-func createNewChannel(conn net.Conn, event *events) chan string {
-	ch := make(chan string)
-	go clientWriter(conn, ch)
-
-	// ch <- "Welcome, " + conn.RemoteAddr().String()
-	event.entering <- ch
-
-	log.Println(conn.RemoteAddr().String() + " has arrived")
-	return ch
 }
 
 func clientWriter(conn net.Conn, ch <-chan string) {
