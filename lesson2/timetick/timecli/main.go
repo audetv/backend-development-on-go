@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -21,7 +22,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	defer func() {
+		log.Println("Close conn. Exit")
+		conn.Close()
+	}()
 	go func() {
 		for {
 			select {
@@ -29,11 +33,19 @@ func main() {
 				return
 			default:
 			}
-			text, _ := io.Copy(os.Stdout, conn)
-			if text == 0 {
-				break
+			buf := make([]byte, 256) // создаем буфер
+			for {
+				_, err = conn.Read(buf)
+				if err == io.EOF {
+					log.Println("Server close conn")
+					return
+				}
+				_, err := io.WriteString(os.Stdout, fmt.Sprintf("Custom output! %s", string(buf)))
+				if err != nil {
+					log.Println("WriteString err", err)
+					return
+				} // выводим измененное сообщение сервера в консоль
 			}
-			log.Println(text)
 		}
 	}()
 
