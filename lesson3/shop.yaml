@@ -229,6 +229,36 @@ components:
           format: int64 # в виде целочисленного значения минимальной размерности валюты (например, центы или копейки)
         image_link:
           type: string
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              itemId:
+                type: integer
+                format: int64
+              price:
+                type: integer
+                format: int64
+              quantity:
+                type: integer
+                format: int32
+        totalPice:
+          type: integer
+          format: int64
+        address:
+          type: string
+        date:
+          type: string
   securitySchemes:
     api_key:
       type: apiKey
