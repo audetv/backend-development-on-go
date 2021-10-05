@@ -1,4 +1,4 @@
-###Timetick
+### Timetick
 
 upd:
 [Используем io.WriteString вместо fmt.Fprintf](https://github.com/audetv/backend-development-on-go/pull/3/commits/4a448b25960b8d7ac9d9c592432a9467506ca337#r721374417)
