@@ -5,12 +5,23 @@ import (
 	"net/http"
 )
 
+type helloHandler struct {
+	subject string
+}
+
+func (h *helloHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Hello, %s!", h.subject)
+}
+
 func main() {
-	http.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello World!")
-	})
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Ya got the wrong place, pal")
-	})
-	http.ListenAndServe(":80", nil)
+	worldHandler := &helloHandler{"World"}
+	roomHandler := &helloHandler{"Mark"}
+
+	http.Handle("/world", worldHandler)
+	http.Handle("/room", roomHandler)
+
+	err := http.ListenAndServe(":80", nil)
+	if err != nil {
+		return
+	}
 }
