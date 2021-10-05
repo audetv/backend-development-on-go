@@ -65,6 +65,22 @@ paths:
           schema:
             type: integer
             format: int64
+        - name: price_range
+          in: query
+          description: Фильтр по диапазону цены
+          required: false
+          explode: true
+          style: deepObject
+          allowReserved: true
+          schema:
+            type: object
+            properties:
+              priceForm:
+                type: integer
+                format: int64
+              priceTo:
+                type: integer
+                format: int64
       responses:
         200:
           description: successful operation
