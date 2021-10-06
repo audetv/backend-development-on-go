@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"time"
 )
@@ -16,16 +15,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		name := r.FormValue("name")
 		fmt.Fprintf(w, "Parsed query-param with key \"name\": %s", name)
 	case http.MethodPost:
-		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, "Unable to read request body", http.StatusBadRequest)
-			return
-		}
-		defer r.Body.Close()
-
 		var employee Employee
-
-		err = json.Unmarshal(body, &employee)
+		err := json.NewDecoder(r.Body).Decode(&employee)
 		if err != nil {
 			http.Error(w, "Unable to unmarshal JSON", http.StatusBadRequest)
 			return
