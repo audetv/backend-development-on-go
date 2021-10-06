@@ -4,11 +4,44 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"time"
 )
 
 type Handler struct{}
+
+type UploadHandler struct {
+	UploadDir string
+}
+
+func (u *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		log.Println("=here")
+		http.Error(w, "Unable to read file", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		http.Error(w, "Unable to read file", http.StatusBadRequest)
+	}
+
+	filePath := ".\\" + u.UploadDir + "\\" + header.Filename
+
+	err = ioutil.WriteFile(filePath, data, 0777)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Unable to save file", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, "File %s has been successfully uploaded", header.Filename)
+}
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -49,8 +82,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	handler := &Handler{}
+	uploadHandler := &UploadHandler{
+		UploadDir: "upload",
+	}
 
 	http.Handle("/", handler)
+	http.Handle("/upload", uploadHandler)
 
 	srv := &http.Server{
 		Addr:         "localhost:80",
