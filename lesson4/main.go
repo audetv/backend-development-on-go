@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -21,7 +22,20 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer r.Body.Close()
-		fmt.Fprintf(w, "Parsed request body: %s\n", string(body))
+
+		var employee Employee
+
+		err = json.Unmarshal(body, &employee)
+		if err != nil {
+			http.Error(w, "Unable to unmarshal JSON", http.StatusBadRequest)
+			return
+		}
+
+		fmt.Fprintf(w, "Got a new employee!\nName: %s\nAge: %d y.o.\nSalary %0.2f\n",
+			employee.Name,
+			employee.Age,
+			employee.Salary,
+		)
 	}
 }
 
