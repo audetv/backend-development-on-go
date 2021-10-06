@@ -2,30 +2,33 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
 )
 
-type helloHandler struct {
-	subject string
-}
+type Handler struct{}
 
-func (h *helloHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// fmt.Fprintf(w, "Hello, %s!", h.subject)
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		fmt.Fprintln(w, "some GET-related logic")
+		name := r.FormValue("name")
+		fmt.Fprintf(w, "Parsed query-param with key \"name\": %s", name)
 	case http.MethodPost:
-		fmt.Fprintln(w, "some POST-related logic")
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Unable to read request body", http.StatusBadRequest)
+			return
+		}
+		defer r.Body.Close()
+		fmt.Fprintf(w, "Parsed request body: %s\n", string(body))
 	}
 }
 
 func main() {
-	worldHandler := helloHandler{"World"}
-	roomHandler := helloHandler{"Mark"}
+	handler := &Handler{}
 
-	http.Handle("/world", &worldHandler)
-	http.Handle("/room", &roomHandler)
+	http.Handle("/", handler)
 
 	srv := &http.Server{
 		Addr:         "localhost:80",
