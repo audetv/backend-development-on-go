@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"net/http"
 	"time"
@@ -26,6 +27,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "Unable to unmarshal JSON", http.StatusBadRequest)
 				return
 			}
+		case "application/xml":
+			err := xml.NewDecoder(r.Body).Decode(&employee)
+			if err != nil {
+				http.Error(w, "Unable to unmarshal XML", http.StatusBadRequest)
+				return
+			}
+
 		default:
 			http.Error(w, "Unknown content type", http.StatusBadRequest)
 			return
