@@ -16,9 +16,18 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Parsed query-param with key \"name\": %s", name)
 	case http.MethodPost:
 		var employee Employee
-		err := json.NewDecoder(r.Body).Decode(&employee)
-		if err != nil {
-			http.Error(w, "Unable to unmarshal JSON", http.StatusBadRequest)
+
+		contentType := r.Header.Get("Content-Type")
+
+		switch contentType {
+		case "application/json":
+			err := json.NewDecoder(r.Body).Decode(&employee)
+			if err != nil {
+				http.Error(w, "Unable to unmarshal JSON", http.StatusBadRequest)
+				return
+			}
+		default:
+			http.Error(w, "Unknown content type", http.StatusBadRequest)
 			return
 		}
 
