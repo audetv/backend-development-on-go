@@ -9,3 +9,15 @@ Content-Disposition: form-data; name="file"; filename="testfile.txt"
 --WebAppBoundary--
 
 ###
+
+# curl -F 'file=@testfile1.txt' http://localhost:3000/upload
+POST http://localhost:3000/upload
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="testfile1.txt"
+
+< testfile1.txt
+--WebAppBoundary--
+
+###

@@ -4,12 +4,45 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
 )
 
 type Handler struct{}
+
+type UploadHandler struct {
+	HostAddr  string
+	UploadDir string
+}
+
+func (u *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "Unable to read file", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		http.Error(w, "Unable to read file", http.StatusBadRequest)
+	}
+
+	filePath := u.UploadDir + "/" + header.Filename
+
+	err = ioutil.WriteFile(filePath, data, 0777)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Unable to save file", http.StatusInternalServerError)
+		return
+	}
+
+	fileLink := u.HostAddr + "/" + header.Filename
+	fmt.Fprintln(w, fileLink)
+}
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -50,13 +83,19 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	handler := &Handler{}
-	srv := http.Server{
-		Addr:         "localhost:3001",
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+	uploadHandler := &UploadHandler{
+		UploadDir: "./upload",
+		HostAddr:  "http://localhost:3002",
 	}
 
 	http.Handle("/", handler)
+	http.Handle("/upload", uploadHandler)
+
+	srv := &http.Server{
+		Addr:         "localhost:3000",
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
 
 	err := srv.ListenAndServe()
 	if err != nil {
