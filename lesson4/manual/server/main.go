@@ -41,6 +41,29 @@ func (u *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fileLink := u.HostAddr + "/" + header.Filename
+
+	req, err := http.NewRequest(http.MethodHead, fileLink, nil)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Unable to check file", http.StatusInternalServerError)
+		return
+	}
+
+	cli := &http.Client{}
+
+	resp, err := cli.Do(req)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Unable to check file", http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Println(err)
+		http.Error(w, "Unable to save file", http.StatusInternalServerError)
+		return
+	}
 	fmt.Fprintln(w, fileLink)
 }
 
