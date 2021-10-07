@@ -15,7 +15,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		name := r.FormValue("name")
-		fmt.Fprintf(w, "Parse query param with key \"name\": %s ", name)
+		fmt.Fprintf(w, "Parsed query-param with key \"name\": %s", name)
 	case http.MethodPost:
 		var employee Employee
 
