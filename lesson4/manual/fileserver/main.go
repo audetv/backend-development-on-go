@@ -54,13 +54,24 @@ func (f *FilesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, ",")
 		}
 		_ = enc.Encode(&File{
-			Name: file.Name(),
+			Name: getName(file.Name()),
 			Ext:  filepath.Ext(file.Name()),
 			Size: file.Size(),
 		})
 	}
 
 	w.(http.Flusher).Flush()
+}
+
+func getName(name string) string {
+	// exclude hidden files
+	if name[:1] == "." {
+		return name
+	}
+	ext := filepath.Ext(name)
+	offset := len(ext) + 37 // 36 UUID + dot
+	substring := name[:len(name)-offset]
+	return substring
 }
 
 func main() {
