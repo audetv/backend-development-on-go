@@ -9,6 +9,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Handler struct{}
@@ -31,7 +33,8 @@ func (u *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to read file", http.StatusBadRequest)
 	}
 
-	filePath := u.UploadDir + "/" + header.Filename
+	fileName := uuid.Must(uuid.NewRandom()).String() + "." + header.Filename
+	filePath := u.UploadDir + "/" + fileName
 
 	err = ioutil.WriteFile(filePath, data, 0777)
 	if err != nil {
@@ -40,7 +43,7 @@ func (u *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fileLink := u.HostAddr + "/" + header.Filename
+	fileLink := u.HostAddr + "/" + fileName
 
 	req, err := http.NewRequest(http.MethodHead, fileLink, nil)
 	if err != nil {
