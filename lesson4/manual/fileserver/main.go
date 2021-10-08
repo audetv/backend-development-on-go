@@ -27,52 +27,44 @@ func (f *FilesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	q := r.URL.Query().Get("ext")
-	log.Println(q)
-
 	files, err := ioutil.ReadDir(f.UploadDir)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-
 	enc := json.NewEncoder(w)
 
 	comma := true
+
 	fmt.Fprintf(w, "[")
 	defer fmt.Fprintln(w, "]")
 
+	q := r.URL.Query().Get("ext")
+
 	for _, file := range files {
-		f := &File{
+		if q != "" {
+			if !strings.Contains(filepath.Ext(file.Name()), q) {
+				continue
+			}
+		}
+		if comma {
+			comma = false
+		} else {
+			fmt.Fprintf(w, ",")
+		}
+		_ = enc.Encode(&File{
 			Name: file.Name(),
 			Ext:  filepath.Ext(file.Name()),
 			Size: file.Size(),
-		}
-		if q != "" {
-			if strings.Contains(filepath.Ext(file.Name()), q) {
-				if comma {
-					comma = false
-				} else {
-					fmt.Fprintf(w, ",")
-				}
-				_ = enc.Encode(f)
-			}
-		} else {
-			if comma {
-				comma = false
-			} else {
-				fmt.Fprintf(w, ",")
-			}
-			_ = enc.Encode(f)
-		}
-
-		w.(http.Flusher).Flush()
+		})
 	}
+
+	w.(http.Flusher).Flush()
 }
 
 func main() {
-	dirToServe := http.Dir("/home/audetv")
+	dirToServe := http.Dir("./upload")
 
 	filesHandler := &FilesHandler{
 		UploadDir: string(dirToServe),
