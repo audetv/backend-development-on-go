@@ -49,26 +49,30 @@ func (f *FilesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Ext:  filepath.Ext(file.Name()),
 			Size: file.Size(),
 		}
-		if comma {
-			comma = false
-		} else {
-			fmt.Fprintf(w, ",")
-		}
 		if q != "" {
 			if strings.Contains(filepath.Ext(file.Name()), q) {
-				log.Println(strings.Contains(filepath.Ext(file.Name()), q))
+				if comma {
+					comma = false
+				} else {
+					fmt.Fprintf(w, ",")
+				}
 				_ = enc.Encode(f)
-				w.(http.Flusher).Flush()
 			}
 		} else {
+			if comma {
+				comma = false
+			} else {
+				fmt.Fprintf(w, ",")
+			}
 			_ = enc.Encode(f)
-			w.(http.Flusher).Flush()
 		}
+
+		w.(http.Flusher).Flush()
 	}
 }
 
 func main() {
-	dirToServe := http.Dir("/Windows/system32")
+	dirToServe := http.Dir("/home/audetv")
 
 	filesHandler := &FilesHandler{
 		UploadDir: string(dirToServe),
