@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -21,6 +22,14 @@ type File struct {
 }
 
 func (f *FilesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "bad method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	q := r.URL.Query().Get("ext")
+	log.Println(q)
+
 	files, err := ioutil.ReadDir(f.UploadDir)
 	if err != nil {
 		log.Fatal(err)
@@ -45,13 +54,21 @@ func (f *FilesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			fmt.Fprintf(w, ",")
 		}
-		_ = enc.Encode(f)
-		w.(http.Flusher).Flush()
+		if q != "" {
+			if strings.Contains(filepath.Ext(file.Name()), q) {
+				log.Println(strings.Contains(filepath.Ext(file.Name()), q))
+				_ = enc.Encode(f)
+				w.(http.Flusher).Flush()
+			}
+		} else {
+			_ = enc.Encode(f)
+			w.(http.Flusher).Flush()
+		}
 	}
 }
 
 func main() {
-	dirToServe := http.Dir("./upload")
+	dirToServe := http.Dir("/Windows/system32")
 
 	filesHandler := &FilesHandler{
 		UploadDir: string(dirToServe),
