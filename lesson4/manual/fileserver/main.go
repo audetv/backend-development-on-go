@@ -48,12 +48,6 @@ func (f *FilesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		_ = enc.Encode(f)
 		w.(http.Flusher).Flush()
 	}
-
-	// for _, file := range files {
-	// 	extension := filepath.Ext(file.Name())
-	// 	fmt.Fprintf(w, "name: %v, ext: %v, size: %v\r\n", file.Name(), extension, file.Size())
-	// }
-
 }
 
 func main() {
