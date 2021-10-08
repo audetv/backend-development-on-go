@@ -18,6 +18,7 @@ type FilesHandler struct {
 type File struct {
 	Name string `json:"name"`
 	Ext  string `json:"ext"`
+	Link string `json:"link"`
 	Size int64  `json:"size"`
 }
 
@@ -56,6 +57,7 @@ func (f *FilesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		_ = enc.Encode(&File{
 			Name: getName(file.Name()),
 			Ext:  filepath.Ext(file.Name()),
+			Link: file.Name(),
 			Size: file.Size(),
 		})
 	}
@@ -69,8 +71,7 @@ func getName(name string) string {
 		return name
 	}
 	ext := filepath.Ext(name)
-	offset := len(ext) + 37 // 36 UUID + dot
-	substring := name[:len(name)-offset]
+	substring := name[37 : len(name)-len(ext)] // 36 UUID + dot
 	return substring
 }
 
