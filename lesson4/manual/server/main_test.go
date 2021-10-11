@@ -90,6 +90,9 @@ func TestUploadHandler_ServeHTTP(t *testing.T) {
 		t.Errorf("Handler returned wrong status code: got %v expext %v", status, http.StatusOK)
 	}
 
+	// Мы не будем тестировать создание UUID и добавление его к имени файла,
+	// так как uuid каждый раз при старте теста будет другой
+	// поэтому можно оставить условие без изменения: если в строке ответа не содержится имя файла testfile
 	expected := "testfile"
 	if !strings.Contains(rr.Body.String(), expected) {
 		t.Errorf("Handler returned unexpected body: got %v expect %v", rr.Body.String(), expected)
