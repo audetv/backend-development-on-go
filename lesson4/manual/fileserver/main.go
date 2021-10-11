@@ -18,7 +18,6 @@ type FilesHandler struct {
 type File struct {
 	Name string `json:"name"`
 	Ext  string `json:"ext"`
-	Link string `json:"link"`
 	Size int64  `json:"size"`
 }
 
@@ -55,24 +54,13 @@ func (f *FilesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, ",")
 		}
 		_ = enc.Encode(&File{
-			Name: getName(file.Name()),
+			Name: file.Name(),
 			Ext:  filepath.Ext(file.Name()),
-			Link: file.Name(),
 			Size: file.Size(),
 		})
 	}
 
 	w.(http.Flusher).Flush()
-}
-
-func getName(name string) string {
-	// exclude hidden files
-	if name[:1] == "." {
-		return name
-	}
-	ext := filepath.Ext(name)
-	substring := name[37 : len(name)-len(ext)] // 36 UUID + dot
-	return substring
 }
 
 func main() {
