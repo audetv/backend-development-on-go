@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -43,10 +44,8 @@ func (f *FilesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("ext")
 
 	for _, file := range files {
-		if q != "" {
-			if !strings.Contains(filepath.Ext(file.Name()), q) {
-				continue
-			}
+		if !findByQuery(q, file) {
+			continue
 		}
 		if comma {
 			comma = false
@@ -61,6 +60,13 @@ func (f *FilesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.(http.Flusher).Flush()
+}
+
+func findByQuery(q string, file fs.FileInfo) bool {
+	if q != "" {
+		return strings.Contains(filepath.Ext(file.Name()), q)
+	}
+	return true
 }
 
 func main() {

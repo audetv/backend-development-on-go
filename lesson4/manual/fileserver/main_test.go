@@ -12,26 +12,31 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		dirToServe string
 		url        string
 		expected   string
-		returnErr  bool
 		name       string
 	}{
 		{
 			dirToServe: "testdata/upload",
 			url:        "/files",
-			expected:   `[{"name":"34cf8110-d6f7-4c72-8126-e2b33917f6ae.testfile.txt","ext":".txt","size":36},{"name":"3ad59372-cc02-4b0a-8e80-1f7a0e6a541e.testfile1.txt","ext":".txt","size":0},{"name":"8848ae1f-a31c-42b8-b512-4ec57906f065.testfile2","ext":".testfile2","size":0}]`,
+			expected:   `[{"name":"34cf8110-d6f7-4c72-8126-e2b33917f6ae.testfile.jpeg","ext":".jpeg","size":36},{"name":"34cf8110-d6f7-4c72-8126-e2b33917f6ae.testfile.txt","ext":".txt","size":36},{"name":"8848ae1f-a31c-42b8-b512-4ec57906f065.testfile2.png","ext":".png","size":0}]`,
 			name:       "ListOfFiles",
 		},
 		{
 			dirToServe: "testdata/upload",
-			url:        "/files?ext=jpg",
+			url:        "/files?ext=gif",
 			expected:   "[]",
 			name:       "NoMatchesFound",
 		},
 		{
 			dirToServe: "testdata/upload",
-			url:        "/files?ext=txt",
-			expected:   `[{"name":"34cf8110-d6f7-4c72-8126-e2b33917f6ae.testfile.txt","ext":".txt","size":36},{"name":"3ad59372-cc02-4b0a-8e80-1f7a0e6a541e.testfile1.txt","ext":".txt","size":0}]`,
-			name:       "MatchesFound",
+			url:        "/files?ext=png",
+			expected:   `[{"name":"8848ae1f-a31c-42b8-b512-4ec57906f065.testfile2.png","ext":".png","size":0}]`,
+			name:       "PngMatchesFound",
+		},
+		{
+			dirToServe: "testdata/upload",
+			url:        "/files?ext=jpeg",
+			expected:   `[{"name":"34cf8110-d6f7-4c72-8126-e2b33917f6ae.testfile.jpeg","ext":".jpeg","size":36}]`,
+			name:       "JpegNoMatchesFound",
 		},
 	}
 	for _, tc := range cases {
