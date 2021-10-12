@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -20,16 +22,7 @@ type File struct {
 	Size int64  `json:"size"`
 }
 
-func (f File) findByQuery(q string) bool {
-	if q != "" {
-		return strings.Contains(f.Name, q)
-	}
-	return true
-}
-
-type Files []File
-
-// Обычный handler без flusher
+// handler with flusher
 func (f *filesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "bad method", http.StatusMethodNotAllowed)
@@ -44,25 +37,36 @@ func (f *filesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(w)
 
+	comma := true
+
+	fmt.Fprintf(w, "[")
+	defer fmt.Fprintln(w, "]")
+
 	q := r.URL.Query().Get("ext")
 
-	var filesJson Files
-
 	for _, file := range files {
-		fileJson := &File{
+		if !findByQuery(q, file) {
+			continue
+		}
+		if comma {
+			comma = false
+		} else {
+			fmt.Fprintf(w, ",")
+		}
+		_ = enc.Encode(&File{
 			Name: file.Name(),
 			Ext:  filepath.Ext(file.Name()),
 			Size: file.Size(),
-		}
-		if !fileJson.findByQuery(q) {
-			continue
-		}
-		filesJson = append(filesJson, *fileJson)
+		})
+		w.(http.Flusher).Flush()
 	}
-	err = enc.Encode(filesJson)
-	if err != nil {
-		log.Fatal(err)
+}
+
+func findByQuery(q string, file fs.FileInfo) bool {
+	if q != "" {
+		return strings.Contains(filepath.Ext(file.Name()), q)
 	}
+	return true
 }
 
 func main() {
