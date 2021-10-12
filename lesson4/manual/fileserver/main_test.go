@@ -25,14 +25,12 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			dirToServe: "testdata/upload",
 			url:        "/files?ext=jpg",
 			expected:   "[]",
-			returnErr:  false,
 			name:       "NoMatchesFound",
 		},
 		{
 			dirToServe: "testdata/upload",
 			url:        "/files?ext=txt",
 			expected:   `[{"name":"34cf8110-d6f7-4c72-8126-e2b33917f6ae.testfile.txt","ext":".txt","size":36},{"name":"3ad59372-cc02-4b0a-8e80-1f7a0e6a541e.testfile1.txt","ext":".txt","size":0}]`,
-			returnErr:  false,
 			name:       "MatchesFound",
 		},
 	}
