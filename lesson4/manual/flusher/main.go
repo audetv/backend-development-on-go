@@ -25,7 +25,7 @@ type File struct {
 // handler with flusher
 func (f *filesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "bad method", http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -76,7 +76,7 @@ func main() {
 		UploadDir: string(dirToServe),
 	}
 
-	fs := &http.Server{
+	srv := &http.Server{
 		Addr:         "localhost:3002",
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
@@ -85,7 +85,7 @@ func main() {
 	http.Handle("/", http.FileServer(dirToServe))
 	http.Handle("/files", filesHandler)
 
-	err := fs.ListenAndServe()
+	err := srv.ListenAndServe()
 	if err != nil {
 		log.Println(err)
 		return
