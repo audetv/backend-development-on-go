@@ -36,7 +36,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			dirToServe: "testdata/upload",
 			url:        "/files?ext=jpeg",
 			expected:   `[{"name":"34cf8110-d6f7-4c72-8126-e2b33917f6ae.testfile.jpeg","ext":".jpeg","size":36}]`,
-			name:       "JpegNoMatchesFound",
+			name:       "JpegMatchesFound",
 		},
 	}
 	for _, tc := range cases {
