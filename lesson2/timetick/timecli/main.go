@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -17,9 +18,36 @@ func main() {
 		Timeout:   time.Second,
 		KeepAlive: time.Minute,
 	}
-	conn, err := dialer.DialContext(ctx, "tcp", "127.127.127:9000")
+	conn, err := dialer.DialContext(ctx, "tcp", "[::1]:9000")
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(io.Copy(os.Stdout, conn))
+	defer func() {
+		log.Println("Close conn. Exit")
+		conn.Close()
+	}()
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+			buf := make([]byte, 256) // создаем буфер
+			for {
+				_, err = conn.Read(buf)
+				if err == io.EOF {
+					log.Println("Server close conn")
+					return
+				}
+				_, err := io.WriteString(os.Stdout, fmt.Sprintf("Custom output! %s", string(buf)))
+				if err != nil {
+					log.Println("WriteString err", err)
+					return
+				} // выводим измененное сообщение сервера в консоль
+			}
+		}
+	}()
+
+	<-ctx.Done()
 }
