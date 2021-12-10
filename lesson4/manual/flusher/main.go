@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/fs"
 	"io/ioutil"
 	"log"
@@ -21,9 +22,7 @@ type File struct {
 	Size int64  `json:"size"`
 }
 
-type Files []File
-
-// Обычный handler без flusher
+// handler with flusher
 func (f *filesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -38,24 +37,28 @@ func (f *filesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(w)
 
-	q := r.URL.Query().Get("ext")
+	comma := true
 
-	filesJson := Files{}
+	fmt.Fprintf(w, "[")
+	defer fmt.Fprintln(w, "]")
+
+	q := r.URL.Query().Get("ext")
 
 	for _, file := range files {
 		if !findByQuery(q, file) {
 			continue
 		}
-		fileJson := &File{
+		if comma {
+			comma = false
+		} else {
+			fmt.Fprintf(w, ",")
+		}
+		_ = enc.Encode(&File{
 			Name: file.Name(),
 			Ext:  filepath.Ext(file.Name()),
 			Size: file.Size(),
-		}
-		filesJson = append(filesJson, *fileJson)
-	}
-	err = enc.Encode(filesJson)
-	if err != nil {
-		log.Fatal(err)
+		})
+		w.(http.Flusher).Flush()
 	}
 }
 

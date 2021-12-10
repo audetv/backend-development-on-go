@@ -46,7 +46,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 func TestUploadHandler_ServeHTTP(t *testing.T) {
 	// открываем файл, который хотим отправить
-	file, err := os.Open("testfile")
+	file, err := os.Open("testdata/testfile")
 	if err != nil {
 		log.Println(err)
 	}
@@ -61,7 +61,7 @@ func TestUploadHandler_ServeHTTP(t *testing.T) {
 	writer.Close()
 
 	// опять создаем запрос, теперь уже на /upload эндпоинт
-	req, _ := http.NewRequest(http.MethodPost, "/upload", body)
+	req, _ := http.NewRequest(http.MethodPost, "upload", body)
 	req.Header.Add("Content-Type", writer.FormDataContentType())
 
 	// создаем ResponseRecorder
@@ -75,7 +75,7 @@ func TestUploadHandler_ServeHTTP(t *testing.T) {
 	defer ts.Close()
 
 	uploadHandler := &UploadHandler{
-		UploadDir: "upload",
+		UploadDir: "testdata/upload",
 		// таким образом мы подменим адрес файлового сервера
 		// и вместо реального, хэндлер будет стучаться на заглушку
 		// которая всегда будет возвращать 200 статус, что нам и нужно
@@ -90,6 +90,9 @@ func TestUploadHandler_ServeHTTP(t *testing.T) {
 		t.Errorf("Handler returned wrong status code: got %v expext %v", status, http.StatusOK)
 	}
 
+	// Мы не будем тестировать создание UUID и добавление его к имени файла,
+	// так как uuid каждый раз при старте теста будет другой
+	// поэтому можно оставить условие без изменения: если в строке ответа не содержится имя файла testfile
 	expected := "testfile"
 	if !strings.Contains(rr.Body.String(), expected) {
 		t.Errorf("Handler returned unexpected body: got %v expect %v", rr.Body.String(), expected)
